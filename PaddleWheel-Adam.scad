@@ -1,6 +1,6 @@
 
-$fa = 5;
-$fs = 1;
+$fa = 0.1;
+$fs = 0.1;
 module rim(width=30, radius=21, screw_radius=5) 
 {
     difference()
@@ -24,6 +24,7 @@ module wheel(tire_width=35, tire_radius=35, rim_width=30, rim_radius=21, screw_r
     color("black") tire(tire_width, tire_radius, rim_radius);
 }
 
+
 module radial_ts(thickness, t_thickness, t_height, radii)
 {
     max_radius = max(radii);
@@ -36,7 +37,7 @@ module radial_ts(thickness, t_thickness, t_height, radii)
             0
         ]) 
         rotate([90,0,0])
-        cylinder(h=max_radius*2,r=t_height,center=true);
+        cylinder(h=max_radius*2,r=t_height+thickness/2,center=true);
         
         for (radius = radii)
         {
@@ -95,35 +96,34 @@ module connector(radius=35, width=20, thickness=2, t_thickness=1)
             scale([1,0.5,1])
             cylinder(h=thickness*2,r=width*0.5,center=true);
     
-            translate([0,radius*0.6,0]) 
-            scale([1,0.75,1])
-            cylinder(h=thickness*2,r=width*0.25,center=true);
-
-            translate([0,radius*0.25,0]) 
-            scale([1,0.75,1])
-            cylinder(h=thickness*2,r=width*0.25,center=true);
+//            translate([0,radius*0.6,0]) 
+//            scale([1,0.75,1])
+//            cylinder(h=thickness*2,r=width*0.25,center=true);
+//
+//            translate([0,radius*0.25,0]) 
+//            scale([1,0.75,1])
+//            cylinder(h=thickness*2,r=width*0.25,center=true);
 
         }
     }
-    radii = [
-        0.77*radius, 
-        0.425*radius,
-    ];
-    radial_t_height = width*0.25;
-    radial_ts(thickness, t_thickness, radial_t_height, radii);
-    
-    translate([0,0,width])
-    mirror([0,0,1])
-    radial_ts(thickness, t_thickness, radial_t_height, radii);
+//    radii = [
+//        0.77*radius, 
+//        0.425*radius,
+//    ];
+//    radial_t_height = width*0.25;
+//    radial_ts(thickness, t_thickness, radial_t_height, radii);
+//    
+//    translate([0,0,width])
+//    mirror([0,0,1])
+//    radial_ts(thickness, t_thickness, radial_t_height, radii);
 }
 
-module connectors(radius=35,width=20,thickness=2,num_connectors=4,t_thickness=2, tube_radius=3)
+module connectors(radius=35, width=20, thickness=2,
+                  num_connectors=4, t_thickness=2, 
+                  tube_radius=3)
 {
-    for (a=[0:num_connectors-1])
-    {
-        rotate([0,0,a*360/(num_connectors)])
-        connector(radius, width, thickness, t_thickness=t_thickness);
-    }
+    multiply_rotate(num_connectors)
+    connector(radius, width, thickness, t_thickness=t_thickness);
     
     cylinder(h=width, r=tube_radius);
 
@@ -145,54 +145,42 @@ module paddle(radius=65, width=40, thickness=2, t_thickness=1)
     paddle_length = radius*0.23;
     difference()
     {
-        
-        translate([0, radius-paddle_length/2, width/2]) 
-        cube([thickness,paddle_length ,width], center=true);
-        
-        
-//        rotate([0,90,0]) 
-//        translate([-width/2,0,0])
-//        {
-//            translate([0,radius,0]) 
-//            scale([1,0.5,1])
-//            cylinder(h=thickness*2,r=width*0.5,center=true);
-//    
-//            translate([0,radius*0.6,0]) 
-//            scale([1,0.75,1])
-//            cylinder(h=thickness*2,r=width*0.25,center=true);
-//
-//            translate([0,radius*0.25,0]) 
-//            scale([1,0.75,1])
-//            cylinder(h=thickness*2,r=width*0.25,center=true);
-//
-//        }
     }
-    radii = [
-        radius-paddle_length+t_thickness/2, 
-        radius-t_thickness/2,
-    ];
-    radial_t_height = width*0.5;
+    translate([0, radius-paddle_length/2, width/2]) 
+    cube([thickness,paddle_length ,width], center=true);
+
+    //translate([0, radius-paddle_length/2, 0]) 
+    //#
     
-    //radial_ts(thickness, t_thickness, radial_t_height*0.5, [radii[0]]);
-    radial_ts(thickness, t_thickness, radial_t_height, [radii[1]]);
-    
-    translate([0,0,width])
-    mirror([0,0,1])
+    //translate([0, 0, width/2]) 
+
+    enable_radial_ts = true;
+    if(enable_radial_ts)
     {
+        radii = [
+            radius-paddle_length+t_thickness/2, 
+            radius-t_thickness/2,
+        ];
+        radial_t_height = width*0.25;
+        
         //radial_ts(thickness, t_thickness, radial_t_height*0.5, [radii[0]]);
         radial_ts(thickness, t_thickness, radial_t_height, [radii[1]]);
+        
+        translate([0,0,width])
+        mirror([0,0,1])
+        {
+            //radial_ts(thickness, t_thickness, radial_t_height*0.5, [radii[0]]);
+            radial_ts(thickness, t_thickness, radial_t_height, [radii[1]]);
+        }
+        
+        //radial_ts(thickness, t_thickness, radial_t_height, radii);
     }
-    
-    //radial_ts(thickness, t_thickness, radial_t_height, radii);
 }
 
-module paddles(radius=35,width=20,thickness=2,num_paddles=4,t_thickness=2, tube_radius=3)
+module paddles(radius=35,width=20,thickness=2,num_paddles=4,t_thickness=1, tube_radius=3)
 {
-    for (a=[0:num_paddles-1])
-    {
-        rotate([0,0,a*360/(num_paddles)])
-        paddle(radius, width, thickness, t_thickness=t_thickness);
-    }
+    multiply_rotate(num_paddles)
+    paddle(radius, width, thickness, t_thickness=t_thickness);
     
     cylinder(h=width, r=tube_radius);
 
@@ -203,74 +191,140 @@ module paddles(radius=35,width=20,thickness=2,num_paddles=4,t_thickness=2, tube_
     cylinder(h=t_thickness, r=tube_radius+radius*2/35.);
 
 
-    translate([0,0,(width-t_thickness*4)*0.5]) 
-    cylinder(h=t_thickness*4, r=tube_radius+radius*1/35.);
+//    translate([0,0,(width-t_thickness*4)*0.5]) 
+//    cylinder(h=t_thickness*4, r=tube_radius+radius*1/35.);
 
 }
 
-module attachment_disk(thickness=3,radius=35,num_screws=5, screw_radius=2.5, screw_distance=13)
+module attachment_disk(thickness=3,radius=35)
 {
+    color("red", alpha=0.8) cylinder(h=thickness, r=35);
+}
+
+module make_screw_holes(num_screws=5, screw_radius=2.5, screw_distance=13, stamp_length=20, rotation=[0,0,0])
+{
+    
     difference()
     {
-        color("red", alpha=0.8) cylinder(h=3, r=35);
-        for (a=[0:num_screws-1])
+        children();
+        rotate(rotation)
+        multiply_rotate(num_screws)
         {
-            rotate([0,0,a*360/(num_screws)])
-            translate([0,screw_distance,-thickness/2])
-            cylinder(h=thickness*2,r=screw_radius);
+            translate([0,screw_distance,-stamp_length/4])
+            cylinder(h=stamp_length,r=screw_radius);
         }
     }
-
 }
 
-module paddle_wheel() 
+module multiply_rotate(num, rotation_axis=[0,0,1])
 {
-    rotate([0,0,(360/5)/2]) attachment_disk(5);
-    
-    translate([0,0,3]) {
-        color("gray") connectors(num_connectors=5,radius=35);
-
-        translate([0,0,20]) 
-        {
-            paddle_disk_tube_radius = 3;
-            paddle_disk_thickness = 3;
-            paddle_disks_distance = 40;
-            paddle_disk_radius = 65;
-
-            // tube connecting disks
-            translate([0,0,0]) 
-            cylinder(
-                h=paddle_disks_distance+paddle_disk_thickness*2, 
-                r=paddle_disk_tube_radius);
-
-            
-            // inner disk
-            color("blue",alpha=0.2)
-            translate([0,0,0]) 
-            cylinder(h=paddle_disk_thickness, r=paddle_disk_radius);
-            
-            translate([0,0,paddle_disk_thickness]) 
-            {
-                // outer disk
-//                color("blue",alpha=1.0)
-//                translate([0,0,paddle_disks_distance])
-//                cylinder(h=paddle_disk_thickness, r=paddle_disk_radius );
-                
-                
-                // paddles
-                color("gray") 
-                translate([0,0,0]) 
-                paddles(
-                    num_paddles=5,
-                    radius=paddle_disk_radius, 
-                    width=paddle_disks_distance);
-            }
-        }
+    rx = rotation_axis[0];
+    ry = rotation_axis[1];
+    rz = rotation_axis[2];
+    for (k=[0:num-1])
+    {
+        rotation = k*360.0/num;
+        rotate([rx*rotation, ry*rotation, rz*rotation])
+        children();
     }
+}
+
+module wheel_attachment_disk(num=5, radius=35, disk_thickness=3, screw_radius=2)
+{
+    rotation_offset=(360/num)/2;
+    
+    make_screw_holes(num, screw_radius, 
+        screw_distance=radius*0.37, stamp_length=disk_thickness*2, 
+        rotation=[0,0,rotation_offset])
+    attachment_disk(disk_thickness);
+}
+
+module make_holes_paddles_attachment(num=5, radius=35, disk_thickness=3, screw_radius=2)
+{
+    rotation_offset=(360/num)/2;
+    
+    make_screw_holes(num, screw_radius, 
+        screw_distance=radius*0.75, stamp_length=disk_thickness*2, 
+        rotation=[0,0,rotation_offset+rotation_offset*0.3333])
+    make_screw_holes(num, screw_radius,
+        screw_distance=radius*0.75, 
+        stamp_length=disk_thickness*2, 
+        rotation=[0,0,rotation_offset-rotation_offset*0.3333])
+    make_screw_holes(num, screw_radius,
+        screw_distance=radius*0.37, 
+        stamp_length=disk_thickness*2, 
+        rotation=[0,0,rotation_offset])
+    
+    children();
+}
+
+module paddles_attachment_disk(num=5, radius=35, disk_thickness=3, screw_radius=2)
+{
+    make_holes_paddles_attachment(num, radius, disk_thickness, screw_radius)
+    attachment_disk(disk_thickness);
+}
+
+module wheel_attachment(radius=35, disk_thickness=2, outer_width=26, num_connectors=5, screw_radius=2.0)
+{
+    wheel_attachment_disk(num_connectors,radius,disk_thickness,screw_radius);
+    
+    translate([0,0,disk_thickness]) {
+        
+        color("gray") 
+        connectors(num_connectors=num_connectors,radius=radius,width=outer_width-disk_thickness*2);
+        
+        translate([0,0,outer_width-disk_thickness*2])
+        paddles_attachment_disk(num_connectors,radius,disk_thickness,screw_radius);
+    }
+}
+
+module paddle_wheel()
+{
+    paddle_disk_tube_radius = 3;
+    paddle_disk_thickness = 2;
+    paddle_disks_distance = 40;
+    paddle_disk_radius = 65;
+
+    // tube connecting disks
+    translate([0,0,0]) 
+    cylinder(
+        h=paddle_disks_distance+paddle_disk_thickness*2, 
+        r=paddle_disk_tube_radius);
+
+    
+    // inner disk
+    color("darkblue",alpha=1.0)
+    translate([0,0,0]) 
+    make_holes_paddles_attachment(5, 35, paddle_disk_thickness)
+    cylinder(h=paddle_disk_thickness, r=paddle_disk_radius);
+//        
+    translate([0,0,paddle_disk_thickness]) 
+    {
+        // outer disk
+                color("darkblue",alpha=1.0)
+                translate([0,0,paddle_disks_distance-1e-2])
+                cylinder(h=paddle_disk_thickness, r=paddle_disk_radius );
+        
+        
+        // paddles
+        color("orange") 
+        translate([0,0,0]) 
+        paddles(
+            num_paddles=8,
+            radius=paddle_disk_radius, 
+            width=paddle_disks_distance);
+    }    
+}
+
+module complete_paddle_wheel() 
+{
+    wheel_attachment();
+    translate([0,0,26])
+    paddle_wheel();
 }
 
 rotate([90,-0.25*360/5,0]) 
 {
-    //translate([0,0,-35/2]) wheel();
-    paddle_wheel();
+    translate([0,0,-35/2]) wheel();
+    complete_paddle_wheel();
 }
